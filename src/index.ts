@@ -43,12 +43,13 @@ app.get(
   async (c) => {
     const schoolId = c.req.param("schoolId")!.replace(/\.ics$/, "");
     const mealFilter = parseMealParam(c.req.query("meal"));
+    const eventTitle = c.req.query("title")?.trim() || undefined;
 
     try {
       const { start, end } = getDefaultDateRange();
       const raw = await fetchMealViewerRaw(schoolId, start, end);
       const clean = transformToClean(raw, mealFilter);
-      const ics = generateICS(clean, mealFilter);
+      const ics = generateICS(clean, mealFilter, eventTitle);
 
       return new Response(ics, {
         headers: {
@@ -184,6 +185,14 @@ function landingPage(host: string): string {
   .feed-url button:hover { background: #f0f0f0; }
   .feed-url button.copied { background: #4caf50; color: #fff; border-color: #4caf50; }
   .feed-label { font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem; }
+  .meal-options { display: flex; gap: 1rem; margin: 0.4rem 0 0.75rem; }
+  .meal-opt { display: flex; align-items: center; gap: 0.3rem; cursor: pointer; font-size: 0.9rem; }
+  .title-input {
+    width: 100%; padding: 0.5rem 0.75rem; font-size: 0.9rem;
+    border: 1px solid #c8e6c9; border-radius: 6px; outline: none; background: #fff;
+  }
+  .title-input:focus { border-color: #4caf50; }
+  .title-hint { font-size: 0.78rem; color: #888; margin: 0.25rem 0 0; }
 
   /* How-to */
   .steps { counter-reset: step; }
@@ -215,15 +224,22 @@ function landingPage(host: string): string {
 
 <div class="feed-section" id="feeds">
   <h3 id="school-name"></h3>
-  <p class="feed-label">Lunch Calendar</p>
-  <div class="feed-url">
-    <code id="lunch-url"></code>
-    <button onclick="copyUrl('lunch-url', this)">Copy</button>
+
+  <p class="feed-label">Meals</p>
+  <div class="meal-options">
+    <label class="meal-opt"><input type="radio" name="meal" value="Lunch" checked> Lunch</label>
+    <label class="meal-opt"><input type="radio" name="meal" value="Breakfast"> Breakfast</label>
+    <label class="meal-opt"><input type="radio" name="meal" value="all"> Both</label>
   </div>
-  <p class="feed-label">Breakfast Calendar</p>
+
+  <p class="feed-label">Event Title <span style="font-weight:400;color:#888">(optional)</span></p>
+  <input type="text" id="title-input" placeholder="Lunch Menu" class="title-input">
+  <p class="title-hint">Leave blank for the default. Custom titles show on each calendar event.</p>
+
+  <p class="feed-label" style="margin-top:0.75rem">Your Calendar URL</p>
   <div class="feed-url">
-    <code id="breakfast-url"></code>
-    <button onclick="copyUrl('breakfast-url', this)">Copy</button>
+    <code id="feed-url"></code>
+    <button onclick="copyUrl('feed-url', this)">Copy</button>
   </div>
 </div>
 
@@ -231,7 +247,7 @@ function landingPage(host: string): string {
 
 <h3>Apple Calendar (iPhone / Mac)</h3>
 <div class="steps">
-  <div class="step">Copy the Lunch or Breakfast URL above</div>
+  <div class="step">Copy the calendar URL above</div>
   <div class="step"><b>On iPhone:</b> Go to <b>Settings &rarr; Calendar &rarr; Accounts &rarr; Add Account &rarr; Other &rarr; Add Subscribed Calendar</b></div>
   <div class="step">Paste the URL and tap <b>Next</b>, then <b>Save</b></div>
 </div>
@@ -326,16 +342,32 @@ async function doSearch(q) {
   } catch {}
 }
 
+let selectedId = null;
 function selectSchool(id, name) {
   hide('results');
+  selectedId = id;
   document.getElementById('search').value = name;
   document.getElementById('school-name').textContent = name;
-  const base = 'https://' + host + '/feed/' + id + '.ics';
-  document.getElementById('lunch-url').textContent = base + '?meal=Lunch';
-  document.getElementById('breakfast-url').textContent = base + '?meal=Breakfast';
+  updateFeedUrl();
   show('feeds');
   document.getElementById('feeds').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+function updateFeedUrl() {
+  if (!selectedId) return;
+  const meal = document.querySelector('input[name="meal"]:checked').value;
+  const title = document.getElementById('title-input').value.trim();
+  const base = 'https://' + host + '/feed/' + selectedId + '.ics';
+  const params = new URLSearchParams();
+  params.set('meal', meal);
+  if (title) params.set('title', title);
+  document.getElementById('feed-url').textContent = base + '?' + params.toString();
+  const ph = meal === 'all' ? 'School Menu' : meal + ' Menu';
+  document.getElementById('title-input').placeholder = ph;
+}
+
+document.querySelectorAll('input[name="meal"]').forEach(function(r) { r.addEventListener('change', updateFeedUrl); });
+document.getElementById('title-input').addEventListener('input', updateFeedUrl);
 
 function copyUrl(elId, btn) {
   const text = document.getElementById(elId).textContent;
