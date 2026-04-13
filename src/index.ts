@@ -10,7 +10,25 @@ import { generateICS } from "./ics";
 import { generateMarkdown } from "./markdown";
 import type { MealType } from "./types";
 
+const CANONICAL_HOST = "lunchcal.com";
+
 const app = new Hono();
+
+// Redirect old domain to lunchcal.com (but not feed/api URLs — don't break existing calendar subscriptions)
+app.use("*", async (c, next) => {
+  const host = c.req.header("host") ?? "";
+  if (host && host !== CANONICAL_HOST && !host.includes("localhost")) {
+    const url = new URL(c.req.url);
+    const path = url.pathname;
+    if (path.startsWith("/feed/") || path.startsWith("/api/") || path.startsWith("/menu/") || path === "/search") {
+      return next();
+    }
+    url.host = CANONICAL_HOST;
+    url.protocol = "https:";
+    return c.redirect(url.toString(), 301);
+  }
+  return next();
+});
 
 function parseMealParam(meal?: string | null): MealType | undefined {
   if (!meal || meal === "all") return undefined;
@@ -109,8 +127,7 @@ app.get("/search", async (c) => {
 });
 
 app.get("/", (c) => {
-  const host = c.req.header("host") ?? "mealviewer-bridge.wishicould.dev";
-  return c.html(landingPage(host));
+  return c.html(landingPage(CANONICAL_HOST));
 });
 
 function landingPage(host: string): string {
