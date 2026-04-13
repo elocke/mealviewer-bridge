@@ -1,9 +1,12 @@
 import ical, { ICalCalendarMethod } from "ical-generator";
 import type { CleanMenu, CleanFoodItem, MealType } from "./types";
 
-export function generateICS(menu: CleanMenu, mealFilter?: MealType): string {
+export function generateICS(menu: CleanMenu, mealFilter?: MealType, eventTitle?: string): string {
+  const calendarName = eventTitle
+    ? `${menu.school.name} - ${eventTitle}`
+    : `${menu.school.name} ${mealFilter ?? "Meal"} Menu`;
   const calendar = ical({
-    name: `${menu.school.name} ${mealFilter ?? "Meal"} Menu`,
+    name: calendarName,
     prodId: {
       company: "mealviewer-bridge",
       product: "mealviewer-bridge",
@@ -39,10 +42,17 @@ export function generateICS(menu: CleanMenu, mealFilter?: MealType): string {
 
       const eventDate = new Date(day.date + "T00:00:00");
 
+      let summary: string;
+      if (eventTitle) {
+        summary = mealFilter ? eventTitle : `${mealType}: ${eventTitle}`;
+      } else {
+        summary = `${mealType} Menu`;
+      }
+
       calendar.createEvent({
         start: eventDate,
         allDay: true,
-        summary: `${mealType} Menu`,
+        summary,
         description: {
           plain: plainLines.join("\n"),
           html: `<div>${htmlParts.join("")}</div>`,
