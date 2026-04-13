@@ -237,6 +237,34 @@ function landingPage(host: string): string {
   <div class="step">Paste the URL and give it a name like "School Lunch"</div>
 </div>
 
+<h3>Skylight Calendar</h3>
+<p style="font-size:0.9rem; color:#555; margin-bottom:0.5rem">Skylight displays calendars from your connected account, so add the feed there first:</p>
+<div class="steps">
+  <div class="step">Subscribe to the feed in whichever calendar your Skylight is connected to (Google, Apple, or Outlook &mdash; see instructions above)</div>
+  <div class="step">Open the <b>Skylight app</b> on your phone</div>
+  <div class="step">Go to <b>Calendars</b> and make sure the new "School Lunch" calendar is toggled <b>on</b></div>
+  <div class="step">The lunch menu will appear as all-day events on your Skylight display</div>
+</div>
+
+<h2>3. Share with Your Family</h2>
+<p style="font-size:0.9rem; color:#555; margin-bottom:0.75rem">Apple doesn't let you share subscribed calendars through Family Sharing directly. Here are two ways to get it on everyone's devices:</p>
+
+<h3>Option A: Everyone subscribes (easiest)</h3>
+<div class="steps">
+  <div class="step">Text or AirDrop the calendar URL to your family members</div>
+  <div class="step">Each person follows the "Add to Your Calendar" steps above on their own phone</div>
+</div>
+<div class="tip">This is the simplest approach &mdash; each person gets their own independent copy that updates automatically.</div>
+
+<h3>Option B: Subscribe once + share via iCloud</h3>
+<div class="steps">
+  <div class="step">Subscribe to the feed on your iPhone (see Apple Calendar steps above)</div>
+  <div class="step">Create a <b>new iCloud calendar</b> called "School Lunch" (Calendar app &rarr; Add Calendar)</div>
+  <div class="step">Manually copy the events (or use a Shortcuts automation) from the subscribed calendar to the iCloud one</div>
+  <div class="step">Tap the <b>(i)</b> next to your new iCloud calendar and <b>Add Person</b> to share it with family members</div>
+</div>
+<div class="tip">Option B is more work to set up but means only one person manages the subscription. Option A is easier for most families.</div>
+
 <div class="api-section">
   <h3>For Developers</h3>
   <p>There's also a JSON API and Markdown endpoint:</p>
